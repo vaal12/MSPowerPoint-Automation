@@ -1,5 +1,5 @@
 #Use 
-# C:\Anaconda3\python.exe  C:\Anaconda3\cwp.py C:\Anaconda3 C:\Anaconda3\python.exe main.py
+# C:\Anaconda3\python.exe  C:\Anaconda3\cwp.py C:\Anaconda3 C:\Anaconda3\python.exe c:\Dev\04.Python\06.Office_automation\Powerpoint_presentation\main.py 
 #  to run so it loads anaconda dependencies
 
 import time
@@ -7,6 +7,8 @@ import win32com.client as win32
 
 import pandas as pd
 import numpy as np
+
+import data_requisition
 
 def placePictureOverShape(pic_file_name, PPSlide, PPshape):
     PPSlide.Shapes.AddPicture(
@@ -17,6 +19,7 @@ def placePictureOverShape(pic_file_name, PPSlide, PPshape):
 
 
 import datetime
+import os
 
 PP_TEMPLATE_FILE_NAME = r"c:\Dev\04.Python\06.Office_automation\Powerpoint_presentation\Template presentation_2"
 def pp():
@@ -40,10 +43,13 @@ def pp():
                     # Typical figures:
                     #     Top:126.0    Left:36.0
                     #     Width:648.0   Height:356.3750305175781
+
+                    pic = data_requisition.getIrisAnalysisPlot()
                     placePictureOverShape(
-                        r"c:\Dev\04.Python\06.Office_automation\Powerpoint_presentation\iris.png",
+                        pic,
                         Slide, Shape
                     )
+                    os.remove(pic)
                     # Slide.Shapes.AddPicture(r"c:\Dev\04.Python\06.Office_automation\Powerpoint_presentation\iris.png",
                     #     1, 1, Shape.Left, Shape.Top, Shape.Width, Shape.Height)
                     break
@@ -52,18 +58,21 @@ def pp():
     pptLayout = Presentation.Slides(2).CustomLayout
     newSlide = Presentation.Slides.AddSlide(Presentation.Slides.Count+1, pptLayout)
     newSlide.Shapes[0].TextFrame.TextRange.Text = "New slide 1"
+    pic = data_requisition.getTop20ArtistSales()
     placePictureOverShape(
-        r"c:\Dev\04.Python\06.Office_automation\Powerpoint_presentation\top20sales.png",
+        pic,
         newSlide, newSlide.Shapes[1]
     )
-    # 
+    os.remove(pic)
 
     newSlide = Presentation.Slides.AddSlide(Presentation.Slides.Count+1, pptLayout)
     newSlide.Shapes[0].TextFrame.TextRange.Text = "New slide 2"
+    pic = data_requisition.getDistributionOfSales()
     placePictureOverShape(
-        r"c:\Dev\04.Python\06.Office_automation\Powerpoint_presentation\distribution_sales.png",
+        pic,
         newSlide, newSlide.Shapes[1]
     )
+    os.remove(pic)
 
     
 
@@ -94,21 +103,21 @@ def excel():
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-def createFigure():
-    NUM_OF_SAMPLES = 10
-    x_arr = np.random.rand(NUM_OF_SAMPLES)
-    y_arr = np.random.rand(NUM_OF_SAMPLES)
-    idx = range(NUM_OF_SAMPLES)
+# def createFigure():
+#     NUM_OF_SAMPLES = 10
+#     x_arr = np.random.rand(NUM_OF_SAMPLES)
+#     y_arr = np.random.rand(NUM_OF_SAMPLES)
+#     idx = range(NUM_OF_SAMPLES)
 
-    df = pd.DataFrame(list(zip(x_arr, y_arr)), index=idx, columns=["x", "y"])
-    ax = df.plot.scatter(x="x", y="y", figsize=(12,6))
-    fig = ax.get_figure()
-    fig.savefig(r"c:\Dev\04.Python\06.Office_automation\Powerpoint_presentation\fig1.png")
+#     df = pd.DataFrame(list(zip(x_arr, y_arr)), index=idx, columns=["x", "y"])
+#     ax = df.plot.scatter(x="x", y="y", figsize=(12,6))
+#     fig = ax.get_figure()
+#     fig.savefig(r"c:\Dev\04.Python\06.Office_automation\Powerpoint_presentation\fig1.png")
     
     
  
 if __name__ == "__main__":
     pass
     # excel()
-    createFigure()
+    # createFigure()
     pp()
