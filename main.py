@@ -2,6 +2,9 @@
 # C:\Anaconda3\python.exe  C:\Anaconda3\cwp.py C:\Anaconda3 C:\Anaconda3\python.exe c:\Dev\04.Python\06.Office_automation\Powerpoint_presentation\main.py 
 #  to run so it loads anaconda dependencies
 
+#Powerpoint reference:
+#   https://docs.microsoft.com/en-us/office/vba/api/powerpoint.textrange.text
+
 import time
 import win32com.client as win32
 
@@ -31,33 +34,37 @@ def pp():
     curr_date = datetime.datetime.now().strftime("%d-%m-%Y")
     Presentation.Slides(1).Shapes[1].TextFrame.TextRange.Text= curr_date
 
-    for Slide in Presentation.Slides:
-        for Shape in Slide.Shapes:
-                print("Have text range:{}".format(Shape.TextFrame.TextRange))
-                txt_str = str(Shape.TextFrame.TextRange)
-                print("txt_str type:{}".format(type(txt_str)))
-                if txt_str.find("%%Placeholder%%")>-1:
-                    print("FOUND")
-                    print("Top:{}    Left:{}".format(Shape.Top, Shape.Left))
-                    print("Width:{}   Height:{}".format(Shape.Width, Shape.Height))
-                    # Typical figures:
-                    #     Top:126.0    Left:36.0
-                    #     Width:648.0   Height:356.3750305175781
+    Presentation.Slides(2).Shapes[0].TextFrame.TextRange.Text= "Total company sales by month"
 
-                    pic = data_requisition.getIrisAnalysisPlot()
-                    placePictureOverShape(
-                        pic,
-                        Slide, Shape
-                    )
-                    os.remove(pic)
-                    # Slide.Shapes.AddPicture(r"c:\Dev\04.Python\06.Office_automation\Powerpoint_presentation\iris.png",
-                    #     1, 1, Shape.Left, Shape.Top, Shape.Width, Shape.Height)
-                    break
-                # Shape.TextFrame.TextRange.Font.Name = "Arial"
+    for Slide in Presentation.Slides:
+        print("Tranversing slide")
+        for Shape in Slide.Shapes:
+            print("tranversing shape:{}".format(Shape.Type))
+            #MsoShapeType: https://docs.microsoft.com/en-us/office/vba/api/office.msoshapetype
+            # print("Have text range:{}".format(Shape.TextFrame.TextRange))
+            txt_str = str(Shape.TextFrame.TextRange.Text)
+            print("txt_str type:{}".format(txt_str))
+            if txt_str.find("%%Placeholder%%")>-1:
+                # print("FOUND")
+                # print("Top:{}    Left:{}".format(Shape.Top, Shape.Left))
+                # print("Width:{}   Height:{}".format(Shape.Width, Shape.Height))
+                # Typical figures:
+                #     Top:126.0    Left:36.0
+                #     Width:648.0   Height:356.3750305175781
+
+                # pic = data_requisition.getIrisAnalysisPlot()
+                pic = data_requisition.getMonthlySales()
+                placePictureOverShape(
+                    pic,
+                    Slide, Shape
+                )# THis will add picture to the Shapes immediately, so the loop will not stop - have to break after this
+                os.remove(pic)
+                break
+            # Shape.TextFrame.TextRange.Font.Name = "Arial"
     
     pptLayout = Presentation.Slides(2).CustomLayout
     newSlide = Presentation.Slides.AddSlide(Presentation.Slides.Count+1, pptLayout)
-    newSlide.Shapes[0].TextFrame.TextRange.Text = "New slide 1"
+    newSlide.Shapes[0].TextFrame.TextRange.Text = "Sales of the top (by sales) 20 artists "
     pic = data_requisition.getTop20ArtistSales()
     placePictureOverShape(
         pic,
@@ -66,13 +73,26 @@ def pp():
     os.remove(pic)
 
     newSlide = Presentation.Slides.AddSlide(Presentation.Slides.Count+1, pptLayout)
-    newSlide.Shapes[0].TextFrame.TextRange.Text = "New slide 2"
+    newSlide.Shapes[0].TextFrame.TextRange.Text = "Proportion of sales by artists"
     pic = data_requisition.getDistributionOfSales()
     placePictureOverShape(
         pic,
         newSlide, newSlide.Shapes[1]
     )
     os.remove(pic)
+
+    for employee in data_requisition.getEmployeesList():
+        newSlide = Presentation.Slides.AddSlide(Presentation.Slides.Count+1, pptLayout)
+        newSlide.Shapes[0].TextFrame.TextRange.Text = "Employee details:{} {}".format(
+            employee["FirstName"], employee["LastName"])
+        pic = data_requisition.getEmployeeSalesGraph(employee["EmployeeId"])
+        placePictureOverShape(
+            pic,
+            newSlide, newSlide.Shapes[1]
+        )
+        os.remove(pic)
+
+
 
     
 

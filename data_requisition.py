@@ -3,6 +3,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 PIC_BASE_PATH = "c:\\Dev\\04.Python\\06.Office_automation\\Powerpoint_presentation\\"
+DB_PATH = r"c:\Dev\04.Python\06.Office_automation\Powerpoint_presentation\sqlite_sample_db\chinook.db"
+
+
+business_conn = None
+def getBusinessDBConnection():
+    global business_conn
+    if business_conn is None:
+        business_conn = sqlite3.connect(DB_PATH)
+    return business_conn
+    
 
 def getRandomScatterPlot():
     NUM_OF_SAMPLES = 10
@@ -52,8 +62,7 @@ def getIrisAnalysisPlot():
 
 def getTop20ArtistSales():
     #http://www.sqlitetutorial.net/sqlite-sample-database/
-
-    business_conn = sqlite3.connect(r"c:\Dev\04.Python\06.Office_automation\Powerpoint_presentation\sqlite_sample_db\chinook.db")
+    
     businessdf = pd.read_sql_query("""
         SELECT ArtistName, SUM(Quantity*UnitPrice) as TotalSales
         FROM (
@@ -90,7 +99,6 @@ def getTop20ArtistSales():
 #END def getTop20ArtistSales():
 
 def getDistributionOfSales():
-
     business_conn = sqlite3.connect(r"c:\Dev\04.Python\06.Office_automation\Powerpoint_presentation\sqlite_sample_db\chinook.db")
     businessdf = pd.read_sql_query("""
         SELECT ArtistName, SUM(Quantity*UnitPrice) as TotalSales
@@ -140,3 +148,104 @@ def getDistributionOfSales():
     return pic_fname
 #END def getDistributionOfSales():
 
+def getMonthlySales():
+    business_conn = getBusinessDBConnection()
+    sales_by_dateDF = pd.read_sql_query("""
+        SELECT strftime('%Y-%m', datetime(InvoiceDate)) as year, SUM(Total) as MonthlySales
+        FROM (
+            SELECT * from invoices
+        )
+        GROUP BY strftime('%Y-%m', datetime(InvoiceDate))
+        ORDER BY strftime('%Y-%m', datetime(InvoiceDate)) ASC
+    """, business_conn, 
+    parse_dates = ["year"])
+    plt1 = sales_by_dateDF.plot(x="year", y="MonthlySales", figsize=(10,8))
+    plt1.set_ylabel("Sales per month, $")
+    plt1.legend().remove()
+    pic_fname = PIC_BASE_PATH+"MonthlySales.png"
+    plt1.get_figure().savefig(
+        pic_fname,
+        bbox_inches = "tight"
+    )
+    return pic_fname
+#END def getMonthlySales():
+
+def getEmployeesList():
+    business_conn = getBusinessDBConnection()
+    employeesDF = pd.read_sql_query("""
+        SELECT EmployeeId, FirstName, employeeLastName as LastName, CAST((SUM(CAST((UnitPrice*100) AS INT)*Quantity)) AS FLOAT)/100 as TotalSales
+        FROM (
+            SELECT * from invoice_items
+            LEFT JOIN  invoices ON invoices.InvoiceId = invoice_items.InvoiceId
+            LEFT JOIN tracks ON invoice_items.TrackId = tracks.TrackID
+            LEFT JOIN albums ON albums.AlbumId = tracks.AlbumId
+            LEFT JOIN (
+                SELECT Name as ArtistName, ArtistId
+                FROM artists
+            ) as artists2 ON artists2.ArtistId = albums.ArtistId
+            LEFT JOIN customers ON customers.CustomerId = invoices.CustomerId
+            LEFT JOIN (
+                SELECT FirstName, LastName as employeeLastName, EmployeeId FROM employees
+            ) as employees2 ON customers.SupportRepId = employees2.EmployeeId
+        )
+        GROUP BY EmployeeId
+        """, business_conn)
+    employeeDF_dict = employeesDF.to_dict(orient="index")
+    cleaned_dict = [employeeDF_dict[x] for x in employeeDF_dict]
+    return cleaned_dict
+#END def getEmploeesList():
+
+def getEmployeeSalesGraph(employeeID):
+    sales_by_dateDF = pd.read_sql_query("""
+        SELECT strftime('%Y-%m', datetime(InvoiceDate)) as year, SUM(Total) as MonthlySales
+        FROM (
+            SELECT * from invoices
+        )
+        GROUP BY strftime('%Y-%m', datetime(InvoiceDate))
+        ORDER BY strftime('%Y-%m', datetime(InvoiceDate)) ASC
+    """, business_conn, parse_dates = ["year"])
+
+
+    employeesSalesDF = pd.read_sql_query("""
+        SELECT EmployeeId, fn as FirstName, ln as LastName, 
+            strftime('%Y-%m', datetime(InvoiceDate)) as SalesMonth, 
+            SUM(Total) as EmployeeTotalSales
+            FROM invoices 
+            LEFT JOIN customers ON customers.CustomerId = invoices.CustomerId
+            LEFT JOIN (
+                SELECT FirstName as fn, LastName as ln, EmployeeId FROM employees
+            ) as employees2 ON customers.SupportRepId = employees2.EmployeeId
+        WHERE EmployeeID = {}
+        GROUP BY strftime('%Y-%m', datetime(InvoiceDate))
+        ORDER BY strftime('%Y-%m', datetime(InvoiceDate))
+        """.format(employeeID), 
+        business_conn, parse_dates=["SalesMonth"])
+
+    employee_calculated_sales = pd.DataFrame(employeesSalesDF.merge(sales_by_dateDF, left_on="SalesMonth", right_on="year"))
+
+    employee_calculated_sales["proporsionOfTotal"] = employee_calculated_sales["EmployeeTotalSales"] / employee_calculated_sales["MonthlySales"]
+
+
+    plt1 = employee_calculated_sales.plot(x="SalesMonth", y=["EmployeeTotalSales"], figsize=(10,8), lw=0.8)
+    plt1.set_ylim(0,50)
+    plt1.set_ylabel("Employee Sales per month, $")
+    plt1.legend(["Sales per month"], bbox_to_anchor=(1.1, 0.2))
+
+    ax2 = plt1.twinx()
+    ax2.spines['right'].set_position(('axes', 1.0))
+    ax2 = employee_calculated_sales.plot(ax = ax2, x="SalesMonth", y=["proporsionOfTotal"], color="red", lw=1.0)
+    ax2.set_ylim(0, 1.0)
+    ax2.set_ylabel("% of employee sales of Total company sales")
+    ax2.legend(["Percent of total sales"], bbox_to_anchor=(1.1, 0.3))
+
+    pic_fname = PIC_BASE_PATH+"EmployeeSalesGraph_{}.png".format(employeeID)
+    plt1.get_figure().savefig(
+        pic_fname,
+        bbox_inches = "tight"
+    )
+    return pic_fname
+
+
+    
+
+#END def getEmployeeSalesGraph(employeeID):
