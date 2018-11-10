@@ -1,14 +1,28 @@
 # Project Title
 
-One Paragraph of project description goes here
+Microsoft PowerPoint presentation creation from SQL (sqlite) database. Buisness analytics with pandas and graphing with matpotlib
 
-## Getting Started
+## Data Source
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+Sqlite database is obtained from #http://www.sqlitetutorial.net/sqlite-sample-database/. 
 
-### Prerequisites
+Database schema: ![sqlite sample DB Schema](http://www.sqlitetutorial.net/wp-content/uploads/2015/11/sqlite-sample-database-color.jpg)
 
-What things you need to install the software and how to install them
+DB file for convenience is also located at sqlite_sample_db\chinook.db in this repository
+
+### Result
+
+The script creates 
+1. Takes "template" PowerPoint presentation - "Template presentation.pptx" and 2
+2. populates it with data which is being taken on the fly from the chinook.db. 
+3. Saves presentation as "Template presentation_2_[date].pptx" so the template presentation stays intact
+4. Creates a PDF file from the saved presentation "Template presentation_2_[date].pdf"
+
+Resulting files are: 
+- Template presentation_2_11-11-2018.pptx
+- Template presentation_2_11-11-2018.pdf
+Also stored in this repository
+
 
 ```
 Give examples
