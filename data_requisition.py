@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 PIC_BASE_PATH = "c:\\Dev\\04.Python\\06.Office_automation\\Powerpoint_presentation\\"
 DB_PATH = r"c:\Dev\04.Python\06.Office_automation\Powerpoint_presentation\sqlite_sample_db\chinook.db"
 
+#Buisness datasource: #http://www.sqlitetutorial.net/sqlite-sample-database/
 
 business_conn = None
 def getBusinessDBConnection():
@@ -61,7 +62,7 @@ def getIrisAnalysisPlot():
 
 
 def getTop20ArtistSales():
-    #http://www.sqlitetutorial.net/sqlite-sample-database/
+    
     
     businessdf = pd.read_sql_query("""
         SELECT ArtistName, SUM(Quantity*UnitPrice) as TotalSales

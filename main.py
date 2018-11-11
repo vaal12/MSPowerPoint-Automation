@@ -24,7 +24,7 @@ def placePictureOverShape(pic_file_name, PPSlide, PPshape):
 import datetime
 import os
 
-PP_TEMPLATE_FILE_NAME = r"c:\Dev\04.Python\06.Office_automation\Powerpoint_presentation\Template presentation_2"
+PP_TEMPLATE_FILE_NAME = r"c:\Dev\04.Python\06.Office_automation\Powerpoint_presentation\Template presentation"
 def pp():
     import win32com.client, sys
     Application = win32com.client.Dispatch("PowerPoint.Application")
